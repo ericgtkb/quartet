@@ -1,0 +1,54 @@
+[project]
+name = "quartet-melody"
+version = "0.1.0"
+description = "Quartet's learning service: PPO training of quartetlings and policy inference."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "grpcio>=1.85.1",
+    "grpcio-health-checking>=1.85.1",
+    "numpy>=2.5.5",
+    "protobuf>=7.36.2",
+    "torch>=2.15.0",
+]
+
+[project.scripts]
+quartet-melody = "melody.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.13.9,<0.14.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+# Supply-chain cooldown: resolve only releases at least 7 days old.
+exclude-newer = "7 days"
+
+# Linux (containers) gets CPU-only PyTorch wheels; macOS uses PyPI's wheels, which include MPS.
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
+[tool.uv.build-backend]
+# Distribution is `quartet-melody`; the import package is `melody`.
+module-name = "melody"
+
+[tool.ruff]
+# Generated protobuf code is not ours to lint or format.
+extend-exclude = ["src/melody/generated"]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "grpcio-tools>=1.85.1",
+    "pytest>=9.2.0",
+    "ruff>=0.17.5",
+]

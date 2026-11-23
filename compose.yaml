@@ -1,0 +1,45 @@
+# The full stack on Linux, CPU only. From the repository root:
+#   docker compose up --build
+# then open http://localhost:8000. Training runs and checkpoints persist in
+# the melody-runs volume.
+name: quartet
+
+services:
+  harmony:
+    build:
+      context: .
+      dockerfile: harmony/Dockerfile
+    restart: unless-stopped
+
+  melody:
+    build:
+      context: .
+      dockerfile: melody/Dockerfile
+    environment:
+      QUARTET_HARMONY_ADDR: harmony:50051
+    volumes:
+      - melody-runs:/data/runs
+    depends_on: [harmony]
+    restart: unless-stopped
+
+  rhythm:
+    build:
+      context: .
+      dockerfile: rhythm/Dockerfile
+    environment:
+      QUARTET_HARMONY_ADDR: harmony:50051
+      QUARTET_MELODY_ADDR: melody:50052
+    depends_on: [harmony, melody]
+    restart: unless-stopped
+
+  timbre:
+    build:
+      context: .
+      dockerfile: timbre/Dockerfile
+    ports:
+      - "8000:80"
+    depends_on: [rhythm]
+    restart: unless-stopped
+
+volumes:
+  melody-runs:

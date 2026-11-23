@@ -1,0 +1,155 @@
+syntax = "proto3";
+
+package quartet.score;
+
+import "score/info.proto";
+import "score/tensor.proto";
+
+option go_package = "github.com/ericgtkb/quartet/rhythm/internal/generated/quartet/score";
+
+// melody: the Python learning service. It serves trained policies to live
+// performances and runs training runs, each a child process that drives one
+// rehearsal on harmony.
+service MelodyService {
+  rpc GetServiceInfo(GetServiceInfoRequest) returns (GetServiceInfoResponse);
+
+  // Trained policies (checkpoints) available to performances.
+  rpc ListPolicies(ListPoliciesRequest) returns (ListPoliciesResponse);
+  // One beat of inference for every slot of a performance, in one forward pass.
+  rpc Act(ActRequest) returns (ActResponse);
+
+  // Training runs. At most one runs at a time.
+  rpc StartTraining(StartTrainingRequest) returns (StartTrainingResponse);
+  rpc ListTrainingRuns(ListTrainingRunsRequest) returns (ListTrainingRunsResponse);
+  rpc GetTrainingRun(GetTrainingRunRequest) returns (GetTrainingRunResponse);
+  // Stops a running run; it saves a final checkpoint first.
+  rpc StopTraining(StopTrainingRequest) returns (StopTrainingResponse);
+  // Replays the run's metrics so far, then streams new ones until it ends.
+  rpc WatchTraining(WatchTrainingRequest) returns (stream TrainingMetrics);
+}
+
+message PolicyInfo {
+  // The training run id; unique, and never a builtin policy name.
+  string name = 1;
+  // harmony's observation layout version the policy was trained on.
+  uint32 observation_version = 2;
+  // Agent-steps trained.
+  uint64 global_step = 3;
+  // Unix seconds.
+  int64 created_at = 4;
+  TrainingStatus status = 5;
+}
+
+message ListPoliciesRequest {}
+
+message ListPoliciesResponse {
+  // Newest first.
+  repeated PolicyInfo policies = 1;
+}
+
+message ActRequest {
+  string policy = 1;
+  // slots × obs_dim float32, as harmony returned them.
+  Tensor observations = 2;
+  // From harmony's CreateWorldResponse. melody refuses a mismatch with the
+  // checkpoint's version (FAILED_PRECONDITION).
+  uint32 observation_version = 3;
+}
+
+message ActResponse {
+  // slots × 3 float32: turn, thrust, sing (see harmony::world::Action).
+  Tensor actions = 1;
+}
+
+// Zero values mean "use the default".
+message TrainingConfig {
+  // Agent-steps to train for.
+  uint64 total_steps = 1;
+  // Rehearsal size: worlds × slots agents step together.
+  uint32 worlds = 2;
+  uint32 slots = 3;
+  uint64 seed = 4;
+}
+
+enum TrainingStatus {
+  TRAINING_STATUS_UNSPECIFIED = 0;
+  TRAINING_STATUS_RUNNING = 1;
+  TRAINING_STATUS_FINISHED = 2;
+  TRAINING_STATUS_STOPPED = 3;
+  TRAINING_STATUS_FAILED = 4;
+}
+
+// One PPO update's metrics. Rates are averaged over the update's rollout.
+message TrainingMetrics {
+  uint32 update = 1;
+  // Agent-steps so far.
+  uint64 global_step = 2;
+  float elapsed_seconds = 3;
+  float steps_per_second = 4;
+  // Mean return and length (beats) of the lives that ended in this rollout;
+  // 0 when none did.
+  float episode_return = 5;
+  float episode_length = 6;
+  float reward_per_step = 7;
+  // Fraction of agent-steps spent singing in a chord.
+  float chord_rate = 8;
+  // Per 1,000 beats of a 64-slot world (64,000 agent-steps), the unit the
+  // baseline comparisons use.
+  float deaths_per_1k_beats = 9;
+  float motes_per_1k_beats = 10;
+  float mean_energy = 11;
+  float policy_loss = 12;
+  float value_loss = 13;
+  float entropy = 14;
+  float approx_kl = 15;
+  float clip_fraction = 16;
+  float explained_variance = 17;
+  float learning_rate = 18;
+}
+
+message TrainingRun {
+  string id = 1;
+  TrainingStatus status = 2;
+  // With defaults filled in.
+  TrainingConfig config = 3;
+  // Unix seconds.
+  int64 created_at = 4;
+  string error = 5;
+  // The most recent metrics; unset before the first update.
+  TrainingMetrics latest = 6;
+}
+
+message StartTrainingRequest {
+  TrainingConfig config = 1;
+}
+
+message StartTrainingResponse {
+  TrainingRun run = 1;
+}
+
+message ListTrainingRunsRequest {}
+
+message ListTrainingRunsResponse {
+  // Newest first.
+  repeated TrainingRun runs = 1;
+}
+
+message GetTrainingRunRequest {
+  string id = 1;
+}
+
+message GetTrainingRunResponse {
+  TrainingRun run = 1;
+}
+
+message StopTrainingRequest {
+  string id = 1;
+}
+
+message StopTrainingResponse {
+  TrainingRun run = 1;
+}
+
+message WatchTrainingRequest {
+  string id = 1;
+}

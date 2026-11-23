@@ -1,0 +1,13 @@
+[package]
+name = "quartet-harmony"
+description = "Quartet's world engine: deterministic simulation and aggregation. No I/O."
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[lib]
+# Package is `quartet-harmony`; code refers to the crate as `harmony`.
+name = "harmony"
+
+[dependencies]
+rayon = "1.12.0"

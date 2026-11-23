@@ -1,0 +1,127 @@
+/*
+ * Design tokens. Components use these custom properties and never hard-code
+ * colors, spacing, radii, or type sizes. Dark values are defined twice: for the
+ * OS preference (unless the user forced light) and for an explicit dark choice.
+ */
+:root {
+  color-scheme: light;
+
+  --color-bg: #f5f5f2;
+  --color-surface: #ffffff;
+  --color-surface-raised: #fafaf7;
+  --color-border: #dedcd5;
+  --color-text: #1c1b22;
+  --color-text-muted: #5d5b66;
+  --color-accent: #5b45d6;
+  --color-accent-contrast: #ffffff;
+  --color-ok: #1f7a4d;
+  --color-ok-bg: #e2f3e9;
+  --color-error: #b3261e;
+  --color-error-bg: #fbe4e2;
+  --color-focus: #5b45d6;
+
+  /* One color per voice; per language for the ensemble view. */
+  --color-voice-soprano: #d9467a;
+  --color-voice-alto: #d9822b;
+  --color-voice-tenor: #2a9d8f;
+  --color-voice-bass: #4361c2;
+  --color-mote: #c9930c;
+  --color-static: #c0392b;
+
+  /*
+   * Chart series, one per voice: the voice colors, re-stepped in dark mode
+   * into the OKLCH lightness band charts need on a dark surface (validated
+   * with the dataviz palette checks). The stage keeps the brighter voices.
+   */
+  --color-series-soprano: var(--color-voice-soprano);
+  --color-series-alto: var(--color-voice-alto);
+  --color-series-tenor: var(--color-voice-tenor);
+  --color-series-bass: var(--color-voice-bass);
+  /* Single-series charts and sequential (heatmap) ramps. */
+  --color-series-1: var(--color-accent);
+  --color-grid: color-mix(in srgb, var(--color-border) 70%, transparent);
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.75rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 1px 2px rgb(20 18 30 / 0.06), 0 1px 1px rgb(20 18 30 / 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --color-bg: #111016;
+    --color-surface: #1a1922;
+    --color-surface-raised: #22212c;
+    --color-border: #2f2d3b;
+    --color-text: #ecebf2;
+    --color-text-muted: #a3a0b1;
+    --color-accent: #a395ff;
+    --color-accent-contrast: #15131d;
+    --color-ok: #6fd6a0;
+    --color-ok-bg: #173126;
+    --color-error: #ff8a80;
+    --color-error-bg: #3a1a1a;
+    --color-focus: #a395ff;
+
+    --color-voice-soprano: #f27ba5;
+    --color-voice-alto: #f0a65c;
+    --color-voice-tenor: #5cc8bb;
+    --color-voice-bass: #7f9bf0;
+    --color-mote: #ffd166;
+    --color-static: #ff6b6b;
+    --color-series-soprano: #d6628d;
+    --color-series-alto: #c47d2f;
+    --color-series-tenor: #30a397;
+    --color-series-bass: #6f8ade;
+
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #111016;
+  --color-surface: #1a1922;
+  --color-surface-raised: #22212c;
+  --color-border: #2f2d3b;
+  --color-text: #ecebf2;
+  --color-text-muted: #a3a0b1;
+  --color-accent: #a395ff;
+  --color-accent-contrast: #15131d;
+  --color-ok: #6fd6a0;
+  --color-ok-bg: #173126;
+  --color-error: #ff8a80;
+  --color-error-bg: #3a1a1a;
+  --color-focus: #a395ff;
+
+  --color-voice-soprano: #f27ba5;
+  --color-voice-alto: #f0a65c;
+  --color-voice-tenor: #5cc8bb;
+  --color-voice-bass: #7f9bf0;
+  --color-mote: #ffd166;
+  --color-static: #ff6b6b;
+  --color-series-soprano: #d6628d;
+  --color-series-alto: #c47d2f;
+  --color-series-tenor: #30a397;
+  --color-series-bass: #6f8ade;
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+}

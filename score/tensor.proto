@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package quartet.score;
+
+option go_package = "github.com/ericgtkb/quartet/rhythm/internal/generated/quartet/score";
+
+enum Dtype {
+  DTYPE_UNSPECIFIED = 0;
+  DTYPE_FLOAT32 = 1;
+  DTYPE_UINT8 = 2;
+}
+
+// A dense tensor: little-endian, row-major. len(data) must equal
+// product(shape) × itemsize(dtype).
+message Tensor {
+  Dtype dtype = 1;
+  repeated uint32 shape = 2;
+  bytes data = 3;
+}

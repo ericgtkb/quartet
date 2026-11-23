@@ -1,0 +1,112 @@
+syntax = "proto3";
+
+package quartet.score;
+
+import "score/info.proto";
+import "score/tensor.proto";
+import "score/world.proto";
+
+option go_package = "github.com/ericgtkb/quartet/rhythm/internal/generated/quartet/score";
+
+// harmony: the Rust world engine.
+service HarmonyService {
+  rpc GetServiceInfo(GetServiceInfoRequest) returns (GetServiceInfoResponse);
+
+  // Live worlds (performances), driven one beat at a time by rhythm.
+  rpc CreateWorld(CreateWorldRequest) returns (CreateWorldResponse);
+  rpc StepWorld(StepWorldRequest) returns (StepWorldResponse);
+  rpc DeleteWorld(DeleteWorldRequest) returns (DeleteWorldResponse);
+  // Aggregated statistics of a live world, including its recent history.
+  rpc GetCensus(GetCensusRequest) returns (GetCensusResponse);
+
+  // A rehearsal (training session): a batch of worlds that lives as long as
+  // the stream. The first request carries the config; each later request
+  // carries actions and gets exactly one response.
+  rpc Rehearse(stream RehearseRequest) returns (stream RehearseResponse);
+}
+
+// Policies implemented inside harmony, so the stack runs without melody.
+enum BuiltinPolicy {
+  BUILTIN_POLICY_UNSPECIFIED = 0;
+  BUILTIN_POLICY_RANDOM = 1;
+  BUILTIN_POLICY_FORAGE = 2;
+  BUILTIN_POLICY_CHOIR = 3;
+}
+
+message CreateWorldRequest {
+  WorldConfig config = 1;
+  // Also return the initial slots × OBS_DIM observations (for an external policy).
+  bool include_observations = 2;
+}
+
+message CreateWorldResponse {
+  string world_id = 1;
+  WorldSnapshot snapshot = 2;
+  Tensor observations = 3;
+  // Version of the observation layout; melody checks it against checkpoints.
+  uint32 observation_version = 4;
+}
+
+message StepWorldRequest {
+  string world_id = 1;
+  oneof control {
+    // slots × 3 float32: turn, thrust, sing (see harmony::world::Action).
+    Tensor actions = 2;
+    BuiltinPolicy builtin = 3;
+  }
+  // Also return slots × OBS_DIM observations (for an external policy).
+  bool include_observations = 4;
+}
+
+message StepWorldResponse {
+  WorldSnapshot snapshot = 1;
+  Tensor observations = 2;
+}
+
+message DeleteWorldRequest {
+  string world_id = 1;
+}
+
+message DeleteWorldResponse {}
+
+message GetCensusRequest {
+  string world_id = 1;
+}
+
+message GetCensusResponse {
+  Census census = 1;
+}
+
+message RehearsalConfig {
+  // Number of independent worlds; world i's seed is derived from world.seed.
+  uint32 worlds = 1;
+  WorldConfig world = 2;
+}
+
+message RehearseRequest {
+  oneof message {
+    RehearsalConfig config = 1;
+    // agents × 3 float32, agents = worlds × slots, world-major.
+    Tensor actions = 2;
+  }
+}
+
+// After the config: the initial observations (rewards and flags are zero).
+// After each actions message: the step's results. When an agent is
+// terminated or truncated, its slot is refilled within the step, so its
+// observation already belongs to the new quartetling (same-step autoreset).
+message RehearseResponse {
+  // agents × obs_dim float32.
+  Tensor observations = 1;
+  // agents float32.
+  Tensor rewards = 2;
+  // agents uint8 (0/1): the quartetling died.
+  Tensor terminated = 3;
+  // agents uint8 (0/1): the quartetling was retired at max age.
+  Tensor truncated = 4;
+  BeatStats stats = 5;
+  // Set in the first response only.
+  uint32 observation_version = 6;
+  uint32 obs_dim = 7;
+  uint32 action_dim = 8;
+}

@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package quartet.score;
+
+option go_package = "github.com/ericgtkb/quartet/rhythm/internal/generated/quartet/score";
+
+// Self-description that every internal service returns. rhythm aggregates these
+// into the public /api/ensemble view.
+message ServiceInfo {
+  // Component name, e.g. "harmony".
+  string name = 1;
+  // Component version, e.g. "0.1.0".
+  string version = 2;
+  // Implementation language and runtime, e.g. "Rust 1.100" or "Python 3.14.0".
+  string runtime = 3;
+  // Free-form, component-specific facts, e.g. {"device": "mps"} for melody.
+  map<string, string> details = 4;
+}
+
+message GetServiceInfoRequest {}
+
+message GetServiceInfoResponse {
+  ServiceInfo info = 1;
+}

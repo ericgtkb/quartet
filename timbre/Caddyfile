@@ -1,0 +1,16 @@
+# Serves the built frontend and proxies the public API to rhythm.
+:80 {
+	handle /api/* {
+		reverse_proxy {$QUARTET_RHYTHM_UPSTREAM} {
+			# Server-Sent Events: flush every frame immediately.
+			flush_interval -1
+		}
+	}
+	handle {
+		encode zstd gzip
+		root * /srv
+		# Client-side routes (/performances/p1, /training/...) fall back to the app.
+		try_files {path} /index.html
+		file_server
+	}
+}

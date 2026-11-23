@@ -1,0 +1,4 @@
+# Generated protobuf/gRPC code is never committed; run scripts/gen-proto.sh (or `just gen`).
+/internal/generated/
+
+/bin/

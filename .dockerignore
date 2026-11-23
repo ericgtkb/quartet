@@ -1,0 +1,15 @@
+# Build contexts are the repository root (every image generates code from
+# score/). Keep local builds, environments, runs, and generated code out.
+**/.git
+**/.DS_Store
+**/node_modules
+**/dist
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+**/target
+**/bin
+**/generated
+melody/runs
+timbre/.eslintcache

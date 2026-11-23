@@ -1,0 +1,173 @@
+syntax = "proto3";
+
+package quartet.score;
+
+option go_package = "github.com/ericgtkb/quartet/rhythm/internal/generated/quartet/score";
+
+enum Voice {
+  VOICE_UNSPECIFIED = 0;
+  VOICE_SOPRANO = 1;
+  VOICE_ALTO = 2;
+  VOICE_TENOR = 3;
+  VOICE_BASS = 4;
+}
+
+// World parameters. Zero values mean "use the default" (64 slots, a 100 × 100
+// arena, 48 motes, 3 static fields). harmony validates the result.
+message WorldConfig {
+  uint64 seed = 1;
+  // A multiple of 4, so every voice is equally represented.
+  uint32 slots = 2;
+  float width = 3;
+  float height = 4;
+  // Explicit counts; use the `has_*` presence to set 0.
+  optional uint32 motes = 5;
+  optional uint32 statics = 6;
+  // Refill vacated slots with offspring of eligible parents (performances).
+  // Rehearsals must leave this false; harmony rejects it there.
+  bool evolve = 7;
+}
+
+message Genome {
+  // Max speed, world units per beat.
+  float tempo = 1;
+  // Hearing radius.
+  float pitch = 2;
+  // Body size.
+  float dynamics = 3;
+}
+
+message Quartetling {
+  uint32 slot = 1;
+  // Unique within a world; a respawned slot gets a new id.
+  uint64 id = 2;
+  Voice voice = 3;
+  Genome genome = 4;
+  float x = 5;
+  float y = 6;
+  // Radians, 0 = +x.
+  float heading = 7;
+  float speed = 8;
+  float energy = 9;
+  float breath = 10;
+  uint32 age = 11;
+  bool singing = 12;
+  bool in_chord = 13;
+  uint64 parent_id = 14;
+  uint32 generation = 15;
+  // The founder this quartetling descends from (its own id for founders).
+  uint64 lineage = 16;
+}
+
+message Mote {
+  float x = 1;
+  float y = 2;
+}
+
+message StaticField {
+  float x = 1;
+  float y = 2;
+  float radius = 3;
+}
+
+// Counters for one beat (or summed over a batch of worlds in a rehearsal).
+message BeatStats {
+  uint32 motes_eaten = 1;
+  uint32 deaths = 2;
+  uint32 chord_members = 3;
+  // Energy summed over every quartetling after the beat (mean = energy / slots).
+  float energy = 4;
+  // Slots refilled by an offspring rather than a founder.
+  uint32 births = 5;
+}
+
+message WorldSnapshot {
+  uint64 beat = 1;
+  float width = 2;
+  float height = 3;
+  // One per slot, in slot order.
+  repeated Quartetling quartetlings = 4;
+  repeated Mote motes = 5;
+  repeated StaticField statics = 6;
+  BeatStats stats = 7;
+}
+
+message TraitStats {
+  float mean = 1;
+  float std = 2;
+}
+
+// Aggregates over the quartetlings of one voice.
+message VoiceCensus {
+  Voice voice = 1;
+  uint32 population = 2;
+  float mean_energy = 3;
+  float mean_age = 4;
+  TraitStats tempo = 5;
+  TraitStats pitch = 6;
+  TraitStats dynamics = 7;
+  uint32 singing = 8;
+  uint32 in_chord = 9;
+  float mean_generation = 10;
+  uint32 max_generation = 11;
+}
+
+// Counts per voice over equal-width bins: counts[voice × bins + bin], voices
+// in Voice order starting at soprano.
+message Histogram {
+  float min = 1;
+  float max = 2;
+  uint32 bins = 3;
+  repeated uint32 counts = 4;
+}
+
+// Quartetlings per cell of a grid over the arena: counts[row × columns +
+// column], row 0 at y = 0.
+message DensityGrid {
+  uint32 columns = 1;
+  uint32 rows = 2;
+  repeated uint32 counts = 3;
+  // Singing quartetlings per cell, same layout.
+  repeated uint32 singing = 4;
+}
+
+// One window of a world's history.
+message CensusSample {
+  // The last beat in the window.
+  uint64 beat = 1;
+  // Beats in the window.
+  uint32 beats = 2;
+  // Summed over the window.
+  uint32 deaths = 3;
+  uint32 motes_eaten = 4;
+  uint32 chord_members = 5;
+  uint32 singing = 6;
+  // At the window's last beat, one per voice in Voice order.
+  repeated float mean_energy = 7;
+  // Summed over the window.
+  uint32 births = 8;
+  // At the window's last beat, one per voice in Voice order.
+  repeated float mean_tempo = 9;
+  repeated float mean_pitch = 10;
+  repeated float mean_dynamics = 11;
+  repeated float mean_generation = 12;
+  uint32 max_generation = 13;
+  // Distinct founder lineages with a living member.
+  uint32 lineages = 14;
+}
+
+message Census {
+  uint64 beat = 1;
+  uint32 slots = 2;
+  // One per voice, in Voice order.
+  repeated VoiceCensus voices = 3;
+  Histogram tempo = 4;
+  Histogram pitch = 5;
+  Histogram dynamics = 6;
+  Histogram energy = 7;
+  DensityGrid density = 8;
+  // Oldest first; a bounded window of recent history.
+  repeated CensusSample history = 9;
+  // Distinct founder lineages with a living member.
+  uint32 lineages = 10;
+}

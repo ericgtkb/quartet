@@ -1,0 +1,4 @@
+# OS and editors. Language-specific ignores live in each subproject's .gitignore.
+.DS_Store
+.idea/
+.vscode/

@@ -1,0 +1,2 @@
+# Supply-chain cooldown: install only releases at least 7 days old (in minutes).
+minimumReleaseAge: 10080

@@ -1,0 +1,12 @@
+# Generated protobuf/gRPC code is never committed; run scripts/gen-proto.sh (or `just gen`).
+/src/melody/generated/
+
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+/dist/
+
+# Training runs: checkpoints and logs.
+/runs/
